@@ -1,7 +1,7 @@
-using UnityEngine;
+using System;
 
 public interface IUIManager
 {
- void OpenUI(string tag,Vector2 position);
- void LoadUI(string nameFolder);
+ public void OpenUI(Type typeOfWindow);
+ public void LoadUI(string nameFolder);
 }

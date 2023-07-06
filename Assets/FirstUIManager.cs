@@ -1,34 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class FirstUIManager:IUIManager
 {
-    private List<GameObject> Windows;
-    private GameObject current; 
+    private Canvas canvas;
+    private List<IWindow> Windows;
+    private IWindow window; 
 
-    public FirstUIManager()
+    
+    public FirstUIManager(Canvas canvas)
     {
-        Windows = new List<GameObject>();
-        current = new GameObject();
-    }
-    public void OpenUI(string tag, Vector2 position)
-    {
+        this.canvas = canvas;
+        Windows = new List<IWindow>();
         
-       var UI = Windows.Find(i => i.CompareTag(tag));
-       if (UI is null) throw new ArgumentException("no prefab found with this tag");
-       GameObject.Destroy(current); 
-       current = UnityEngine.Object.Instantiate(UI);
-       current.transform.SetParent(GameObject.Find("Canvas").transform);
-       current.transform.localScale = new Vector3(1, 1, 1);
-       current.transform.position = new Vector3(position.x, position.y);
-       
-
+    }
+    public void OpenUI(Type typeOfWindow)
+    { 
+        if (typeOfWindow.GetType().GetInterfaces().Contains(typeof(IWindow))) throw new ArgumentException("window type should be IWindow");
+        window.Close();
+        window = Windows.Find(i => i.GetType() == typeOfWindow);
+        window.Open();
     }   
     public void LoadUI(string nameFolder)
     {
-        Windows = new List<GameObject>(Resources.LoadAll<GameObject>(nameFolder));
+        var GameObject = Resources.LoadAll(nameFolder);
+        foreach (var obj in GameObject)
+        {
+            window = obj.GetComponent<IWindow>();
+            if (window is not null)
+            {
+                window.Init(canvas);
+                Windows.Add(window);
+            } 
+        }
+
+        window = Windows.Last();
     }
 }

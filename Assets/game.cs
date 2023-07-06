@@ -5,16 +5,17 @@ using UnityEngine;
 
 public class game : MonoBehaviour
 {
-    public IUIManager UIManager;
+    private IUIManager UIManager;
+    [SerializeField] private Canvas canvas;
 
     private void Start()
     {
-        UIManager = new FirstUIManager();
+        UIManager = new FirstUIManager(canvas);
         UIManager.LoadUI("GameScene");
     }
 
-    public void Open(string tag)
+    public void Open(string type)
     {
-        UIManager.OpenUI(tag, new Vector2(0,0));
+        UIManager.OpenUI(Type.GetType(type));
     }
 }
