@@ -7,7 +7,8 @@ using UnityEngine;
 public class FirstUIManager : IUIManager
 {
     private Canvas canvas;
-    private List<IWindow> Windows;
+    private List<GameObject> Windows;
+    private GameObject gameObject;
     private IWindow window;
     private Transform ActiveBox, DeactiveBox;
 
@@ -15,28 +16,32 @@ public class FirstUIManager : IUIManager
     {
         this.ActiveBox = ActiveBox;
         this.DeactiveBox = DeactiveBox;    
-        Windows = new List<IWindow>();
+        Windows = new List<GameObject>();
 
     }
 
     public void ShowUI<typeOfWindow>() where typeOfWindow : IWindow
     {
+        
+        gameObject?.SetActive(false);
         window?.Hide();
-        window?.Transform.SetParent(DeactiveBox);
-        window = Get<typeOfWindow>();
+        gameObject?.transform.SetParent(DeactiveBox);
+        gameObject = Get<typeOfWindow>();
+        window = gameObject.GetComponent<IWindow>();
+        gameObject.SetActive(true);
         window.Show();
-        window.Transform.SetParent(ActiveBox);
+        gameObject.transform.SetParent(ActiveBox);
     }
 
-    public IWindow Get<typeOfWindow>() where typeOfWindow : IWindow
+    public GameObject Get<typeOfWindow>() where typeOfWindow : IWindow
     {
-        return Windows.Find(i => i is typeOfWindow);
+        return Windows.Find(i => i.GetComponent< typeOfWindow>() is not null);
     }
 
-    public void Set<typeOfWindow>(IWindow window) where typeOfWindow : IWindow
+    public void Set<typeOfWindow>(GameObject window) where typeOfWindow : IWindow
     {
-        int index = Windows.FindIndex(i => i is typeOfWindow);
-        Windows[index] = window;
+        var windowTypeOf = Get<typeOfWindow>();
+        windowTypeOf = window;
     }
 
     public void LoadUI(string nameFolder)
@@ -47,7 +52,7 @@ public class FirstUIManager : IUIManager
             IWindow window = gameObject.GetComponent<IWindow>();
             if (window is not null)
             {
-                Windows.Add(window);
+                Windows.Add(gameObject);
             }
         }
     }
@@ -57,8 +62,8 @@ public class FirstUIManager : IUIManager
         for (int i = 0; i < Windows.Count; i++)
         {
   
-            Windows[i] = GameObject.Instantiate(Windows[i].Transform.gameObject, DeactiveBox).GetComponent<IWindow>();
-            Windows[i].Hide();
+            Windows[i] = GameObject.Instantiate(Windows[i], DeactiveBox);
+            Windows[i].SetActive(false);
         }
     }
 }
