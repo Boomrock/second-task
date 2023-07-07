@@ -1,53 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Interfaces;
+using Unity.VisualScripting;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public class FirstUIManager : IUIManager
 {
+    private const string _pathResoures = "GameScene";
+    private readonly IUIRoot _uiRoot;
     private Canvas canvas;
-    private Dictionary<Type, GameObject> Windows;
-    private Transform ActiveBox, DeactiveBox;
+    private Dictionary<Type, GameObject> _initWindows = new Dictionary<Type, GameObject>();
+    private Dictionary<Type, UIWindow> _loadWindows = new Dictionary<Type, UIWindow>();
 
-    public FirstUIManager(Transform ActiveBox, Transform DeactiveBox)
+    public FirstUIManager(IUIRoot UIRoot)
     {
-        this.ActiveBox = ActiveBox;
-        this.DeactiveBox = DeactiveBox;    
-        Windows = new Dictionary<Type, GameObject>();
-
+        _uiRoot = UIRoot;
     }
 
-    public void Show<typeOfWindow>() where typeOfWindow : IWindow
+    public typeOfWindow Show<typeOfWindow>() where typeOfWindow : UIWindow
     {
-        GameObject gameObject = Windows[typeof(typeOfWindow)];
-        IWindow window = gameObject.GetComponent<IWindow>();
-        gameObject.SetActive(true);
-        gameObject.transform.SetParent(ActiveBox);
+        var window = Get<typeOfWindow>();
+        window.transform.SetParent(_uiRoot.ActiveBox, false);
+        window.transform.rotation = Quaternion.identity;
+        window.transform.localScale = Vector3.one;
+        window.transform.localPosition = Vector3.zero;
         window.Show();
+        return window.GetComponent<typeOfWindow>();
     }
 
-    public void Hide<typeOfWindow>() where typeOfWindow : IWindow
+    public void Hide<typeOfWindow>() where typeOfWindow : UIWindow
     {
-        GameObject gameObject = Windows[typeof(typeOfWindow)];
-        IWindow window = gameObject.GetComponent<IWindow>();
-        gameObject.SetActive(false);
-        gameObject.transform.SetParent(DeactiveBox);
+        var window = Get<typeOfWindow>();
+        window.transform.SetParent(_uiRoot.DeactiveBox, false);
+        window.transform.rotation = Quaternion.identity;
+        window.transform.localScale = Vector3.one;
+        window.transform.localPosition = Vector3.zero;
         window.Hide();
     }
 
-    public IWindow Get<typeOfWindow>() where typeOfWindow : IWindow
+    public typeOfWindow Get<typeOfWindow>() where typeOfWindow : UIWindow
     {
-        return Windows[typeof(typeOfWindow)].GetComponent<IWindow>();
+        return _loadWindows[typeof(typeOfWindow)].GetComponent<typeOfWindow>();
     }
+    
 
-    public void Set<typeOfWindow>(GameObject window) where typeOfWindow : IWindow
+    public void LoadUI()
     {
-        Windows[typeof(typeOfWindow)] = window;
-    }
+        var windows =  Resources.LoadAll(_pathResoures, typeof(IWindow));
+        foreach (var window in  windows)
+        {
+            var type = window.GetType();
+            _loadWindows.Add(type, (UIWindow)window);
+        }
 
-    public void LoadUI(string nameFolder)
-    {
-        GameObject[] gameObjects = Resources.LoadAll<GameObject>(nameFolder);
+        /*GameObject[] gameObjects = Resources.LoadAll<GameObject>(nameFolder);
         Debug.Log(gameObjects.Length);
         foreach (var gamaObject in gameObjects)
         {
@@ -57,18 +65,15 @@ public class FirstUIManager : IUIManager
             {
                 Windows[window.GetType()] = gamaObject;
             }
-        }
+        }*/
     }
 
     public void Init()
     {
-        Type[] Keys = Windows.Keys.ToArray();
-        foreach (var key in Keys)
+        foreach (var window in _loadWindows)
         {
-
-            Windows[key] = GameObject.Instantiate(Windows[key], DeactiveBox);
-            Windows[key].SetActive(false);
-           
+            var prefab = GameObject.Instantiate(window.Value);
+            _initWindows.Add(window.Key, prefab.gameObject);
         }
     }
 

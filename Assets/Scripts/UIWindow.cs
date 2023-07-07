@@ -1,15 +1,8 @@
 ﻿using UnityEngine;
-public class UIWindow: MonoBehaviour, IWindow
+public abstract class UIWindow : MonoBehaviour, IWindow
 {
-    public void Show()
-    {
-//some action
-    }
-
-    public void Hide()
-    {
-//some action
-
-    }
-    
+    public virtual void Show()
+    { }
+    public virtual void Hide()
+    { }
 }

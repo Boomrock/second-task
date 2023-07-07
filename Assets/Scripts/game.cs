@@ -6,29 +6,21 @@ using UnityEngine;
 
 public class game : MonoBehaviour
 {
+    
     private IUIManager uiManager;
-    [SerializeField] private Transform ActiveBox, 
-                                        DeactiveBox;
-
+    [SerializeField] private UIRoot _uiRoot;
     private void Start()
     {
-        uiManager = new FirstUIManager(ActiveBox, DeactiveBox);
-        uiManager.LoadUI("GameScene");
+        uiManager = new FirstUIManager(_uiRoot);
+        uiManager.LoadUI();
         uiManager.Init();
     }
 
-    public void Open(string typeName)
+    private void Update()
     {
-        Type typeArgument = Type.GetType(typeName);
-        MethodInfo method = uiManager.GetType().GetMethod("Show");
-        MethodInfo genericMethod = method.MakeGenericMethod(typeArgument);
-        genericMethod.Invoke(uiManager, null);
-    }
-    public void Hide(string typeName)
-    {
-        Type typeArgument = Type.GetType(typeName);
-        MethodInfo method = uiManager.GetType().GetMethod("Hide");
-        MethodInfo genericMethod = method.MakeGenericMethod(typeArgument);
-        genericMethod.Invoke(uiManager, null);
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            uiManager.Show<MainMenu>();
+        }   
     }
 }
