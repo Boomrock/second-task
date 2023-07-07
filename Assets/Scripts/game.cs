@@ -20,7 +20,14 @@ public class game : MonoBehaviour
     public void Open(string typeName)
     {
         Type typeArgument = Type.GetType(typeName);
-        MethodInfo method = uiManager.GetType().GetMethod("ShowUI");
+        MethodInfo method = uiManager.GetType().GetMethod("Show");
+        MethodInfo genericMethod = method.MakeGenericMethod(typeArgument);
+        genericMethod.Invoke(uiManager, null);
+    }
+    public void Hide(string typeName)
+    {
+        Type typeArgument = Type.GetType(typeName);
+        MethodInfo method = uiManager.GetType().GetMethod("Hide");
         MethodInfo genericMethod = method.MakeGenericMethod(typeArgument);
         genericMethod.Invoke(uiManager, null);
     }

@@ -1,69 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class FirstUIManager : IUIManager
 {
     private Canvas canvas;
-    private List<GameObject> Windows;
-    private GameObject gameObject;
-    private IWindow window;
+    private Dictionary<Type, GameObject> Windows;
     private Transform ActiveBox, DeactiveBox;
 
     public FirstUIManager(Transform ActiveBox, Transform DeactiveBox)
     {
         this.ActiveBox = ActiveBox;
         this.DeactiveBox = DeactiveBox;    
-        Windows = new List<GameObject>();
+        Windows = new Dictionary<Type, GameObject>();
 
     }
 
-    public void ShowUI<typeOfWindow>() where typeOfWindow : IWindow
+    public void Show<typeOfWindow>() where typeOfWindow : IWindow
     {
-        
-        gameObject?.SetActive(false);
-        window?.Hide();
-        gameObject?.transform.SetParent(DeactiveBox);
-        gameObject = Get<typeOfWindow>();
-        window = gameObject.GetComponent<IWindow>();
+        GameObject gameObject = Windows[typeof(typeOfWindow)];
+        IWindow window = gameObject.GetComponent<IWindow>();
         gameObject.SetActive(true);
-        window.Show();
         gameObject.transform.SetParent(ActiveBox);
+        window.Show();
     }
 
-    public GameObject Get<typeOfWindow>() where typeOfWindow : IWindow
+    public void Hide<typeOfWindow>() where typeOfWindow : IWindow
     {
-        return Windows.Find(i => i.GetComponent< typeOfWindow>() is not null);
+        GameObject gameObject = Windows[typeof(typeOfWindow)];
+        IWindow window = gameObject.GetComponent<IWindow>();
+        gameObject.SetActive(false);
+        gameObject.transform.SetParent(DeactiveBox);
+        window.Hide();
+    }
+
+    public IWindow Get<typeOfWindow>() where typeOfWindow : IWindow
+    {
+        return Windows[typeof(typeOfWindow)].GetComponent<IWindow>();
     }
 
     public void Set<typeOfWindow>(GameObject window) where typeOfWindow : IWindow
     {
-        var windowTypeOf = Get<typeOfWindow>();
-        windowTypeOf = window;
+        Windows[typeof(typeOfWindow)] = window;
     }
 
     public void LoadUI(string nameFolder)
     {
         GameObject[] gameObjects = Resources.LoadAll<GameObject>(nameFolder);
-        foreach (var gameObject in gameObjects)
+        Debug.Log(gameObjects.Length);
+        foreach (var gamaObject in gameObjects)
         {
-            IWindow window = gameObject.GetComponent<IWindow>();
+            
+            IWindow window = gamaObject.GetComponent<IWindow>();
             if (window is not null)
             {
-                Windows.Add(gameObject);
+                Windows[window.GetType()] = gamaObject;
             }
         }
     }
 
     public void Init()
     {
-        for (int i = 0; i < Windows.Count; i++)
+        Type[] Keys = Windows.Keys.ToArray();
+        foreach (var key in Keys)
         {
-  
-            Windows[i] = GameObject.Instantiate(Windows[i], DeactiveBox);
-            Windows[i].SetActive(false);
+
+            Windows[key] = GameObject.Instantiate(Windows[key], DeactiveBox);
+            Windows[key].SetActive(false);
+           
         }
     }
+
 }
